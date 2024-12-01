@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<h1><b>Welcome</b> {{ first_name }} {{ last_name }}</h1>
+<hr>
+
+<!-- "Create or Join Meeting" buttons -->
+<div class="create-meeting-button">
+    <div class="button-container">
+        <!-- Create Meeting Button -->
+        <button id="createMeetingButton" class="btn btn-primary">Create Meeting</button>
+        
+        <!-- Join Meeting Button -->
+        <a class="btn btn-primary" href="{{ url_for('join') }}">Join Meeting</a>
+        
+        <!-- Logout Button -->
+        <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</div>
+
+<!-- SweetAlert2 for Popups -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const createMeetingButton = document.getElementById("createMeetingButton");
+
+    createMeetingButton.addEventListener("click", () => {
+        // Send a request to detect emotion
+        fetch("/detect_emotion", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const emotionResult = data.emotion_result;
+
+            // Show popup and redirect or notify based on emotion
+            if (emotionResult === "happy" || emotionResult === "neutral") {
+                Swal.fire({
+                    icon: "success",
+                    title: "Emotion Detected",
+                    text: `Your emotion is ${emotionResult}. Redirecting to the meeting...`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    willClose: () => {
+                        window.location.href = "{{ url_for('meeting') }}";
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Emotion Not Suitable",
+                    text: "Your current emotion is not suitable to create a meeting. Please try again later.",
+                    confirmButtonText: "Okay"
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error detecting emotion:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to detect emotion. Please try again later.",
+                confirmButtonText: "Okay"
+            });
+        });
+    });
+</script>
+{% endblock %}

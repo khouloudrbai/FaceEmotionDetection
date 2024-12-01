@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Join Meeting{% endblock %}
+
+{% block content %}
+
+<style>
+    .disabled {
+        pointer-events: none;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="container">
+    <h1 class="text-center mt-5">Join Meeting</h1>
+
+    <!-- Emotion Detection Button -->
+    <div class="text-center">
+        <button id="detectEmotionButton" class="btn btn-primary">Detect Emotion</button>
+    </div>
+
+    <!-- Display Detected Emotion -->
+    <div class="text-center mt-3">
+        <p id="emotion-result" class="font-weight-bold">Detected Emotion: None</p>
+    </div>
+
+    <!-- Join Meeting Form -->
+    <form method="POST" action="{{ url_for('join') }}" class="mt-4">
+        <div class="form-group">
+            <input
+                type="text"
+                placeholder="Room ID:"
+                class="form-control"
+                id="roomID"
+                name="roomID"
+                required
+            >
+        </div>
+
+
+        <button
+            type="submit"
+            id="joinButton"
+            class="btn btn-success disabled"
+            disabled
+        >
+            Join Meeting
+        </button>
+    </form>
+</div>
+
+<script>
+    const detectEmotionButton = document.getElementById("detectEmotionButton");
+    const emotionResultElement = document.getElementById("emotion-result");
+    const joinButton = document.getElementById("joinButton");
+
+    detectEmotionButton.addEventListener("click", () => {
+        fetch("/detect_emotion", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                const emotionResult = data.emotion_result;
+
+                // Update the detected emotion text
+                emotionResultElement.textContent = `Detected Emotion: ${emotionResult}`;
+
+                // Enable or disable the join button based on the emotion
+                if (emotionResult === "happy" || emotionResult === "neutral") {
+                    joinButton.disabled = false;
+                    joinButton.classList.remove("disabled");
+                } else {
+                    joinButton.disabled = true;
+                    joinButton.classList.add("disabled");
+                }
+            })
+            .catch(error => {
+                console.error("Error detecting emotion:", error);
+                emotionResultElement.textContent = "Error detecting emotion.";
+                joinButton.disabled = true;
+                joinButton.classList.add("disabled");
+            });
+    });
+</script>
+
+{% endblock %}
